@@ -178,6 +178,7 @@ GameObject:
   m_Component:
   - component: {fileID: 344053378720898323}
   - component: {fileID: 114193520491779564}
+  - component: {fileID: 65739095893082174}
   m_Layer: 0
   m_Name: Player_Base_Building_Model
   m_TagString: Untagged
@@ -213,6 +214,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ede40da7a47087b4d83e4e584af0b0e5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  m_Health: 10
+--- !u!65 &65739095893082174
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6360046985728068882}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1, y: 1, z: 1}
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &7905741092742571039
 GameObject:
   m_ObjectHideFlags: 0

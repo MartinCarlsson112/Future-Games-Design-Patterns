@@ -2,10 +2,68 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+public interface IBullet
+{
+    //effect
+}
+
 public class Bullet : MonoBehaviour
 {
-    void UpdateBullet()
+    private float m_DamageAmount = 1;
+    private Collider m_Collider;
+    private float m_BulletSpeed = 10.0f;
+    private Transform m_Target;
+    public Transform Target
     {
+        get => m_Target;
+        set => m_Target = value;
+    }
+    TowerManager m_TowerManager;
+    public TowerManager TowerManager
+    {
+        get => m_TowerManager;
+        set => m_TowerManager = value;
+    }
 
+    private BulletType m_BulletType;
+
+    public BulletType BulletType
+    {
+        get => m_BulletType;
+
+    }
+
+    public void Initialize(TowerManager towerManager, BulletType bulletType)
+    {
+        m_TowerManager = towerManager;
+        m_BulletType = BulletType;
+        m_Collider = GetComponent<Collider>();
+    }
+
+    void MoveToTarget()
+    {
+        transform.position = Vector3.MoveTowards(transform.position, m_Target.position, m_BulletSpeed * Time.deltaTime);
+    }
+
+    public void UpdateBullet()
+    {
+        if(gameObject.activeSelf)
+        {
+            if(m_Target)
+            {
+                MoveToTarget();
+            }
+
+            var overlaps = Physics.OverlapBox(transform.position, m_Collider.bounds.extents);
+            foreach(var overlap in overlaps)
+            {
+                var unitComp = overlap.GetComponent<Unit>();
+                if(unitComp)
+                {
+                    unitComp.TakeDamage(m_DamageAmount);
+                    m_TowerManager.DestroyBullet(this);
+                }
+            }
+        }
     }
 }

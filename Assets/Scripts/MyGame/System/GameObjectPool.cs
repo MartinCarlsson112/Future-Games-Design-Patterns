@@ -12,6 +12,11 @@ public class GameObjectPool : Tools.IPool<GameObject>
     private Stack<GameObject> m_FreeStack = new Stack<GameObject>();
     private List<GameObject> m_Objects = new List<GameObject>();
 
+    public List<GameObject> List
+    {
+        get => m_Objects;
+    }
+
     public GameObjectPool(uint initSize,  GameObject prefab, uint expandBy = 1, Transform parent = null)
     {
         if (initSize > 0)
@@ -60,7 +65,7 @@ public class GameObjectPool : Tools.IPool<GameObject>
 
     public void Return(GameObject returnedObject)
     {
-        if(m_Objects.Contains(returnedObject))
+        if(m_Objects.Contains(returnedObject) && !m_FreeStack.Contains(returnedObject))
         {
             returnedObject.SetActive(false);
             m_FreeStack.Push(returnedObject);

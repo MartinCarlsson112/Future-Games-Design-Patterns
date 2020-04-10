@@ -5,16 +5,23 @@ using UnityEngine;
 public class Unit : MonoBehaviour
 {
     private bool m_HasPath = false;
+
     private float m_UpdateTimer = 0.0f;
     private float m_UpdateTime = 0.5f;
+
     private float m_MovementSpeed = 10f;
 
-    public UnitManager m_Manager;
+    private float m_Health = 10.0f;
 
+    private float m_SlowDuration = 1.0f;
+    private float m_SlowAccu = 0;
+
+
+    
     [SerializeField]
     private List<Vector2Int> m_CurrentPath;
 
-    //TODO: Make into property
+    private UnitManager m_Manager;
     private PlayerBase m_PlayerBase;
 
     public void Initialize(UnitManager unitManager, PlayerBase playerBase)
@@ -32,23 +39,61 @@ public class Unit : MonoBehaviour
             {
                 RequestPath();
                 m_UpdateTimer = m_UpdateTime;
-
             }
         }
         else
         {
             ExecutePathing();
         }
+
+
+        var overlaps = Physics.OverlapBox(transform.position, new Vector3(0.5f, 0.5f, 0.5f));
+
+        foreach(var overlap in overlaps)
+        {
+            if(overlap.gameObject == m_PlayerBase.gameObject)
+            {
+                m_PlayerBase.TakeDamage(1);
+                m_Manager.DestroyUnit(this);
+                gameObject.SetActive(false);
+            }
+        }
+
+
     }
 
+    public int GetRemainingStepsOnPath()
+    {
+        if(m_CurrentPath != null)
+        {
+            return m_CurrentPath.Count;
+        }
+        return -1;
+    }
+
+    public void Slow()
+    {
+
+    }
+
+    public void TakeDamage(float damageAmount)
+    {
+        m_Health -= damageAmount;
+        if(m_Health <= 0)
+        {
+            m_Health = 0;
+            m_Manager.DestroyUnit(this);
+        }
+    }
+       
     void RequestPath()
     {
         Vector3Int start = Vector3Int.FloorToInt(transform.position);
         Vector3Int end = Vector3Int.FloorToInt(m_PlayerBase.transform.position);
         m_HasPath = true;
         m_CurrentPath = m_Manager.AddPathRequest(start, end, this);
-
     }
+
     bool Approx(Vector3 a, Vector3 b)
     {
         Vector3 v = a - b;
@@ -73,11 +118,10 @@ public class Unit : MonoBehaviour
         {
             transform.position += direction * Time.deltaTime * m_MovementSpeed;
         }
-   
-        if (Approx(transform.position, targetPosition))
+
+        if(Approx(transform.position, targetPosition))
         {
             m_CurrentPath.RemoveAt(0);
         }
     }
-
 }

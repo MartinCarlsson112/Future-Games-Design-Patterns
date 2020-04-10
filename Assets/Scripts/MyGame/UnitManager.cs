@@ -48,7 +48,7 @@ public class UnitManager : MonoBehaviour
         for(int i = 0; i < 5; i++)
         {
             GameObject go = m_UnitPool.Rent(true);
-            var unit = go.GetComponent<Unit>();
+            var unit = go.transform.GetComponentInChildren<Unit>();
             unit.Initialize(this, playerBase);
             go.transform.position = m_EnemyBase.transform.position;
         }

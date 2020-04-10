@@ -72,6 +72,7 @@ public class DependencyInjector : MonoBehaviour
                 var allObjects = GameObject.FindObjectsOfType(elementType);
                 var arrayToCopy = Array.CreateInstance(elementType, allObjects.Length);
                 Array.Copy(allObjects, arrayToCopy, allObjects.Length);
+                property.SetValue(injectable, arrayToCopy);
             }
             else
             {
@@ -93,6 +94,7 @@ public class DependencyInjector : MonoBehaviour
                 var allObjects = GameObject.FindObjectsOfType(elementType);
                 var arrayToCopy = Array.CreateInstance(elementType, allObjects.Length);
                 Array.Copy(allObjects, arrayToCopy, allObjects.Length);
+                field.SetValue(injectable, arrayToCopy);
             }
             else
             {
