@@ -1,12 +1,15 @@
 ﻿using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 using System.Linq;
 
 public class UnitManager : MonoBehaviour
 {
-    public GameObject prefab;
+    public GameObject m_NormalUnitPrefab;
+    public GameObject m_LargeUnitPrefab;
 
-    GameObjectPool m_UnitPool;
+    ComponentPool<NormalUnit> m_NormalUnitPool;
+    ComponentPool<LargeUnit> m_LargeUnitPool;
     WorldGrid m_WorldGrid;
 
     [Inject]
@@ -23,39 +26,48 @@ public class UnitManager : MonoBehaviour
         set => m_WorldGrid = value;
         get => m_WorldGrid;
     }
-    //wave data
 
-        //make into observer
-            //observe units active
-
-    //currently active unit count
-
-    //unitmanager scriptable object
+    public struct WaveData
+    {
+        uint m_TypeOne, m_TypeTwo;
+    }
+    List<WaveData> m_WaveData;
 
     private void Start()
     {
-        m_UnitPool = new GameObjectPool(5, prefab, 1, transform);
-        SpawnUnits();
+        m_NormalUnitPool = new ComponentPool<NormalUnit>(5, m_NormalUnitPrefab);
+        m_LargeUnitPool = new ComponentPool<LargeUnit>(5, m_LargeUnitPrefab);
+        StartCoroutine(SpawnWave(5, 0, 1.0f));
+        //get wave data from world grid
     }
 
-    public List<Vector2Int> AddPathRequest(Vector3Int start, Vector3Int end, Unit unit)
+    IEnumerator SpawnWave(uint nTypeOne, uint nTypeTwo, float delayBetweenSpawns)
     {
-        //TODO: Do path request queue
-        return WorldGrid.GetPath(new Vector2Int(start.x / 2, start.z /2 ), new Vector2Int(end.x /2, end.z /2)).ToList();
-    }
-    void SpawnUnits(/* input data */)
-    {
-        for(int i = 0; i < 5; i++)
+        for(int i = 0; i < nTypeOne; i++)
         {
-            GameObject go = m_UnitPool.Rent(true);
-            var unit = go.transform.GetComponentInChildren<Unit>();
-            unit.Initialize(this, playerBase);
-            go.transform.position = m_EnemyBase.transform.position;
+            NormalUnit unit = m_NormalUnitPool.Rent(true);
+            unit.Initialize(playerBase, this);
+            unit.transform.position = m_EnemyBase.transform.position;
+            yield return new WaitForSeconds(delayBetweenSpawns);
+        }
+
+        for(int i = 0; i < nTypeTwo; i++)
+        {
+            LargeUnit unit = m_LargeUnitPool.Rent(true);
+            unit.Initialize(playerBase, this);
+            unit.transform.position = m_EnemyBase.transform.position;
+            yield return new WaitForSeconds(delayBetweenSpawns);
         }
     }
 
-    public void DestroyUnit(Unit unit)
+    public List<Vector2Int> RequestPath(Vector3Int start, Vector3Int end, NormalUnit unit)
     {
-        m_UnitPool.Return(unit.gameObject);
+        return WorldGrid.GetPath(new Vector2Int(start.x / 2, start.z /2 ), new Vector2Int(end.x /2, end.z /2)).ToList();
+    }
+  
+
+    public void DestroyUnit(NormalUnit unit)
+    {
+        m_NormalUnitPool.Return(unit);
     }
 }

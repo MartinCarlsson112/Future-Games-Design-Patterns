@@ -69,6 +69,7 @@ public class GameObjectPool : Tools.IPool<GameObject>
         {
             returnedObject.SetActive(false);
             m_FreeStack.Push(returnedObject);
+            Debug.Log("Unit Returned");
         }
     }
 }

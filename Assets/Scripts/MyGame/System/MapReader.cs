@@ -2,13 +2,23 @@
 using UnityEngine;
 using System.IO;
 
+public struct Wave
+{
+    uint m_TypeOne, m_TypeTwo;
+
+    public Wave(uint typeOne, uint typeTwo)
+    {
+        m_TypeOne = typeOne;
+        m_TypeTwo = typeTwo;
+    }
+}
+
 public class MapData
 {
     private List<int> m_Grid;
     private Vector2Int m_Bounds;
     private List<Vector2Int> m_Accessibles;
-    //towers
-    //Spawn waves
+    private List<Wave> m_Waves;
     public List<int> Grid => m_Grid;
     public Vector2Int Bounds => m_Bounds;
 
@@ -19,7 +29,12 @@ public class MapData
         m_Grid = new List<int>();
         m_Bounds = new Vector2Int();
         m_Accessibles = new List<Vector2Int>();
-        //Spawn waves
+        m_Waves = new List<Wave>();
+    }
+
+    public void AddWave(uint typeOne, uint typeTwo)
+    {
+        m_Waves.Add(new Wave(typeOne, typeTwo));
     }
 
     public void InitializeBounds(int columns)
@@ -58,22 +73,39 @@ public static class MapReader
         mapData = new MapData();
         StreamReader reader = new StreamReader(fileName);
         int columns = -1;
-        bool finished = false;
-        while (!reader.EndOfStream && !finished)
+        bool finishedReadingTiles = false;
+        while (!reader.EndOfStream && !finishedReadingTiles)
         {
+            int typeOne = -1;
+            int typeTwo = -1;
+            string wave = "";
             string s = reader.ReadLine();
             for (int i = 0; i < s.Length; i++)
             {
                 char character = s[i];
                 if (character.Equals('#'))
                 {
-                    finished = true;
-                    //Spawn waves
-                    break;
+                    finishedReadingTiles = true;
+                }
+                else if(!finishedReadingTiles)
+                {
+                    mapData.Grid.Add((int)char.GetNumericValue(character));
                 }
                 else
                 {
-                    mapData.Grid.Add((int)char.GetNumericValue(character));
+                    if(character.Equals(' ') || character.Equals('\n'))
+                    {
+                        int number = int.Parse(wave);
+                        if(typeOne != -1)
+                        {
+                            typeOne = number;
+                        }
+                        else
+                        {
+                            typeTwo = number;
+                        }
+                    }
+                    wave.Insert(wave.Length, character.ToString());
                 }
             }
             columns++;

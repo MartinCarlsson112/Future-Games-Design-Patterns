@@ -13,11 +13,13 @@ public class Bullet : MonoBehaviour
     private Collider m_Collider;
     private float m_BulletSpeed = 10.0f;
     private Transform m_Target;
+    private Vector3 m_TargetPosition;
     public Transform Target
     {
         get => m_Target;
-        set => m_Target = value;
+        set { m_TargetPosition = value.position; m_Target = value; }
     }
+
     TowerManager m_TowerManager;
     public TowerManager TowerManager
     {
@@ -42,7 +44,7 @@ public class Bullet : MonoBehaviour
 
     void MoveToTarget()
     {
-        transform.position = Vector3.MoveTowards(transform.position, m_Target.position, m_BulletSpeed * Time.deltaTime);
+        transform.position = Vector3.MoveTowards(transform.position, m_TargetPosition, m_BulletSpeed * Time.deltaTime);
     }
 
     public void UpdateBullet()
@@ -57,7 +59,7 @@ public class Bullet : MonoBehaviour
             var overlaps = Physics.OverlapBox(transform.position, m_Collider.bounds.extents);
             foreach(var overlap in overlaps)
             {
-                var unitComp = overlap.GetComponent<Unit>();
+                var unitComp = overlap.transform.root.GetComponent<NormalUnit>();
                 if(unitComp)
                 {
                     unitComp.TakeDamage(m_DamageAmount);

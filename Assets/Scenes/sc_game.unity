@@ -184,7 +184,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac36e16721e974541ad5468d0c7fb1a8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  prefab: {fileID: 3358623668188840345, guid: 116fda0e5defb46aba819fdb1f4ec0bf, type: 3}
+  m_NormalUnitPrefab: {fileID: 2200137854672797386, guid: e8ce2e5ae0b1fa74a83ced140e235914,
+    type: 3}
+  m_LargeUnitPrefab: {fileID: 6825076280964418374, guid: 086b862a72331a142ae51901f94c7b9b,
+    type: 3}
   m_EnemyBase: {fileID: 0}
   playerBase: {fileID: 0}
 --- !u!4 &570133051
@@ -383,6 +386,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_BulletPrefab: {fileID: 225077031991834588, guid: e2865f010891d4cda90f443c0fe28d13,
     type: 3}
+  m_FreezingBulletPrefab: {fileID: 0}
 --- !u!4 &1176699685
 Transform:
   m_ObjectHideFlags: 0

@@ -24,7 +24,7 @@ public class Tower : MonoBehaviour
         m_Seeking = true;
         while(true)
         {
-            m_TargetCount = Physics.OverlapSphereNonAlloc(transform.position, m_TowerRange, m_Targets);
+            m_TargetCount = Physics.OverlapSphereNonAlloc(transform.position, m_TowerRange, m_Targets, LayerMask.GetMask("Unit"));
             yield return new WaitForSeconds(m_SeekTimer);
         }
     }
@@ -40,14 +40,17 @@ public class Tower : MonoBehaviour
         int bestIndex = -1;
         for(int i = 0; i < m_TargetCount; i++)
         {
-            var unitComp = m_Targets[i].GetComponent<Unit>();
-            if(unitComp)
+            if(m_Targets[i].transform.root.gameObject.activeSelf)
             {
-                int stepsRemaining = unitComp.GetRemainingStepsOnPath();
-                if(stepsRemaining != -1 && stepsRemaining < shortestPathRemaining)
+                var unitComp = m_Targets[i].transform.root.GetComponent<UnitBase>();
+                if(unitComp)
                 {
-                    shortestPathRemaining = stepsRemaining;
-                    bestIndex = i;
+                    int stepsRemaining = unitComp.GetRemainingStepsOnPath();
+                    if(stepsRemaining != -1 && stepsRemaining < shortestPathRemaining)
+                    {
+                        shortestPathRemaining = stepsRemaining;
+                        bestIndex = i;
+                    }
                 }
             }
         }
@@ -88,7 +91,7 @@ public class Tower : MonoBehaviour
     public void UpdateTower(TowerManager towerManager)
     {
         m_ShootAccu += Time.deltaTime;
-        if(m_CurrentTarget)
+        if(m_CurrentTarget && m_CurrentTarget.transform.root.gameObject.activeSelf)
         {
             if(Vector3.Distance(transform.position, m_CurrentTarget.position) > m_TowerRange)
             {

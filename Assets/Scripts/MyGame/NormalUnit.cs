@@ -1,22 +1,16 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
-public class Unit : MonoBehaviour
+
+public class NormalUnit : UnitBase
 {
     private bool m_HasPath = false;
-
-    private float m_UpdateTimer = 0.0f;
     private float m_UpdateTime = 0.5f;
-
+    private float m_UpdateTimer = 0;
     private float m_MovementSpeed = 10f;
-
     private float m_Health = 10.0f;
-
     private float m_SlowDuration = 1.0f;
     private float m_SlowAccu = 0;
-
-
     
     [SerializeField]
     private List<Vector2Int> m_CurrentPath;
@@ -24,11 +18,6 @@ public class Unit : MonoBehaviour
     private UnitManager m_Manager;
     private PlayerBase m_PlayerBase;
 
-    public void Initialize(UnitManager unitManager, PlayerBase playerBase)
-    {
-        m_Manager = unitManager;
-        m_PlayerBase = playerBase;
-    }
 
     private void Update()
     {
@@ -46,7 +35,6 @@ public class Unit : MonoBehaviour
             ExecutePathing();
         }
 
-
         var overlaps = Physics.OverlapBox(transform.position, new Vector3(0.5f, 0.5f, 0.5f));
 
         foreach(var overlap in overlaps)
@@ -55,14 +43,11 @@ public class Unit : MonoBehaviour
             {
                 m_PlayerBase.TakeDamage(1);
                 m_Manager.DestroyUnit(this);
-                gameObject.SetActive(false);
             }
         }
-
-
     }
 
-    public int GetRemainingStepsOnPath()
+    public override int GetRemainingStepsOnPath()
     {
         if(m_CurrentPath != null)
         {
@@ -71,12 +56,8 @@ public class Unit : MonoBehaviour
         return -1;
     }
 
-    public void Slow()
-    {
 
-    }
-
-    public void TakeDamage(float damageAmount)
+    public override void TakeDamage(float damageAmount)
     {
         m_Health -= damageAmount;
         if(m_Health <= 0)
@@ -91,7 +72,7 @@ public class Unit : MonoBehaviour
         Vector3Int start = Vector3Int.FloorToInt(transform.position);
         Vector3Int end = Vector3Int.FloorToInt(m_PlayerBase.transform.position);
         m_HasPath = true;
-        m_CurrentPath = m_Manager.AddPathRequest(start, end, this);
+        m_CurrentPath = m_Manager.RequestPath(start, end, this);
     }
 
     bool Approx(Vector3 a, Vector3 b)
@@ -123,5 +104,21 @@ public class Unit : MonoBehaviour
         {
             m_CurrentPath.RemoveAt(0);
         }
+    }
+
+    public override void ApplySlow(float amount, float duration)
+    {
+
+    }
+
+    public override void ClearSlow()
+    {
+
+    }
+
+    public override void Initialize(PlayerBase playerBase, UnitManager unitManager)
+    {
+        m_Manager = unitManager;
+        m_PlayerBase = playerBase;
     }
 }

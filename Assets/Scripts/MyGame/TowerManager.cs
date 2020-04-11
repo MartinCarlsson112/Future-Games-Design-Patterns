@@ -1,5 +1,4 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 
 public enum BulletType
 {
@@ -25,10 +24,10 @@ public class TowerManager : MonoBehaviour
     [SerializeField]
     private GameObject m_FreezingBulletPrefab;
 
-    private GameObjectPool[] m_BulletPools = new GameObjectPool[(int)BulletType.COUNT];
+    private ComponentPool<Bullet>[] m_BulletPools = new ComponentPool<Bullet>[(int)BulletType.COUNT];
     private void Start()
     {
-        m_BulletPools[(int)BulletType.Normal] = new GameObjectPool(5, m_BulletPrefab);
+        m_BulletPools[(int)BulletType.Normal] = new ComponentPool<Bullet>(5, m_BulletPrefab);
         foreach(var bullet in m_BulletPools[(int)BulletType.Normal].List)
         {
             bullet.GetComponent<Bullet>().Initialize(this, BulletType.Normal);
@@ -61,7 +60,7 @@ public class TowerManager : MonoBehaviour
 
     public Bullet RequestBullet(BulletType type)
     {
-        GameObject bullet =  m_BulletPools[(int)type].Rent(false);
+        Bullet bullet = m_BulletPools[(int)type].Rent(false);
 
         var bulletComp = bullet.GetComponent<Bullet>();
         bulletComp.Initialize(this, type);
@@ -71,6 +70,6 @@ public class TowerManager : MonoBehaviour
 
     public void DestroyBullet(Bullet bullet)
     {
-        m_BulletPools[(int)bullet.BulletType].Return(bullet.gameObject);
+        m_BulletPools[(int)bullet.BulletType].Return(bullet);
     }
 }

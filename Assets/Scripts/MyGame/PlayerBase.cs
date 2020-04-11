@@ -1,6 +1,6 @@
 ﻿using UnityEngine;
 
-public class PlayerBase : MonoBehaviour
+public class PlayerBase : MonoBehaviour, IDamageable
 {
     [SerializeField]
     private float m_Health = 20;
@@ -11,7 +11,6 @@ public class PlayerBase : MonoBehaviour
         if(m_Health <= 0)
         {
             m_Health = 0;
-            //Fire game lost event
         }
     }
 }
