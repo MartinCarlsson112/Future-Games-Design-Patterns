@@ -6,6 +6,9 @@ public struct Wave
 {
     uint m_TypeOne, m_TypeTwo;
 
+    public uint TypeOne => m_TypeOne;
+    public uint TypeTwo => m_TypeTwo;
+
     public Wave(uint typeOne, uint typeTwo)
     {
         m_TypeOne = typeOne;
@@ -21,6 +24,8 @@ public class MapData
     private List<Wave> m_Waves;
     public List<int> Grid => m_Grid;
     public Vector2Int Bounds => m_Bounds;
+
+    public List<Wave> Waves => m_Waves;
 
     public List<Vector2Int> Accessibles => m_Accessibles;
 
@@ -68,50 +73,76 @@ public class MapData
 
 public static class MapReader
 {
+
+    private static void ReadTiles(string s, ref MapData mapData)
+    {
+        for(int i = 0; i < s.Length; i++)
+        {
+            char character = s[i];
+            mapData.Grid.Add((int)char.GetNumericValue(character));
+        }
+
+    }
+
+    private static void ReadWave(string s, ref MapData mapData)
+    {
+        uint typeOne = 0;
+        uint typeTwo = 0;
+        string wave = "";
+
+        for(int i = 0; i < s.Length; i++)
+        {
+            char character = s[i];
+            if(character.Equals(' '))
+            {
+                if(uint.TryParse(wave, out uint number))
+                {
+                    typeOne = number;
+                    wave = "";
+                }
+            }
+            else
+            {
+                wave = wave.Insert(wave.Length, character.ToString());
+            }
+
+            if(i == s.Length - 1)
+            {
+                if(uint.TryParse(wave, out uint number))
+                {
+                    typeTwo = number;
+                    mapData.AddWave(typeOne, typeTwo);
+                }
+            }
+        }
+    }
+
     public static void LoadFromFile(string fileName, out MapData mapData)
     {
         mapData = new MapData();
         StreamReader reader = new StreamReader(fileName);
-        int columns = -1;
+        int columns = 0;
         bool finishedReadingTiles = false;
-        while (!reader.EndOfStream && !finishedReadingTiles)
+        while (!reader.EndOfStream)
         {
-            int typeOne = -1;
-            int typeTwo = -1;
-            string wave = "";
             string s = reader.ReadLine();
-            for (int i = 0; i < s.Length; i++)
+
+            if(s[0].Equals('#'))
             {
-                char character = s[i];
-                if (character.Equals('#'))
-                {
-                    finishedReadingTiles = true;
-                }
-                else if(!finishedReadingTiles)
-                {
-                    mapData.Grid.Add((int)char.GetNumericValue(character));
-                }
-                else
-                {
-                    if(character.Equals(' ') || character.Equals('\n'))
-                    {
-                        int number = int.Parse(wave);
-                        if(typeOne != -1)
-                        {
-                            typeOne = number;
-                        }
-                        else
-                        {
-                            typeTwo = number;
-                        }
-                    }
-                    wave.Insert(wave.Length, character.ToString());
-                }
+                finishedReadingTiles = true;
             }
-            columns++;
+
+            if(!finishedReadingTiles)
+            {
+                ReadTiles(s, ref mapData);
+                columns++;
+            }
+            else
+            {
+                ReadWave(s, ref mapData);
+            }
         }
         mapData.InitializeBounds(columns);
         mapData.InitializeAccessibles();
-        //towers
     }
 }

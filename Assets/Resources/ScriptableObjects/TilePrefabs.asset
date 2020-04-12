@@ -11,12 +11,12 @@ MonoBehaviour:
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0b9e415d52e426b4b95215e9f2e6f269, type: 3}
   m_Name: TilePrefabs
-  m_EditorClassIdentifier: Assembly-CSharp-Editor::TilePrefabScriptableObject
+  m_EditorClassIdentifier: 
   m_TileTypes: 000000000100000002000000030000000400000005000000
   m_GameObjects:
   - {fileID: 8446340793006353421, guid: 3445e6bc04d6d478291c03e5d82bb4fc, type: 3}
   - {fileID: 5807043221564994009, guid: 146d056a4463e4d4380e1679e4d2e16f, type: 3}
   - {fileID: 5719485938209910767, guid: 9058376e4a8804756acc0e60103feae4, type: 3}
-  - {fileID: 5719485938209910767, guid: 9058376e4a8804756acc0e60103feae4, type: 3}
+  - {fileID: 8593271636017513408, guid: 1745a08ed217e6a44b9ac4aeba38de34, type: 3}
   - {fileID: 6189042043493516721, guid: ddaec73c1732b4af4b5f402d92b9f36f, type: 3}
   - {fileID: 6360046985728068882, guid: c6e46598445204935bcf241407b687d5, type: 3}

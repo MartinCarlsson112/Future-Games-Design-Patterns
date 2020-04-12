@@ -1,15 +1,8 @@
 ﻿using UnityEngine;
 
-public enum BulletType
-{
-    Normal,
-    Freezing,
-    COUNT
-}
-
-
 public class TowerManager : MonoBehaviour
 {
+    [SerializeField]
     private Tower[] m_Towers;
 
     [Inject]
@@ -21,9 +14,6 @@ public class TowerManager : MonoBehaviour
     [SerializeField]
     private GameObject m_BulletPrefab;
 
-    [SerializeField]
-    private GameObject m_FreezingBulletPrefab;
-
     private ComponentPool<Bullet>[] m_BulletPools = new ComponentPool<Bullet>[(int)BulletType.COUNT];
     private void Start()
     {
@@ -32,8 +22,7 @@ public class TowerManager : MonoBehaviour
         {
             bullet.GetComponent<Bullet>().Initialize(this, BulletType.Normal);
         }
-        //m_BulletPools[(int)BulletType.Freezing] = new GameObjectPool(5, m_FreezingBulletPrefab);
-
+        
     }
 
     private void Update()
@@ -44,18 +33,11 @@ public class TowerManager : MonoBehaviour
         }
 
         var normalBulletArray = m_BulletPools[(int)BulletType.Normal].List;
-       // var freezingBulletArray = m_BulletPools[(int)BulletType.Freezing].List;
-       
 
         foreach(var bullet in normalBulletArray)
         {
             bullet.GetComponent<Bullet>().UpdateBullet();
         }
-
-        //foreach(var bullet in freezingBulletArray)
-        //{
-        //    bullet.GetComponent<Bullet>().UpdateBullet();
-        //}
     }
 
     public Bullet RequestBullet(BulletType type)
@@ -66,7 +48,7 @@ public class TowerManager : MonoBehaviour
         bulletComp.Initialize(this, type);
 
         return bullet.GetComponent<Bullet>();
-    }
+     }
 
     public void DestroyBullet(Bullet bullet)
     {

@@ -1,23 +1,29 @@
 ﻿using UnityEngine;
-using System.Collections.Generic;
 using System.Collections;
 public class Tower : MonoBehaviour
 {
-    BulletType m_BulletType;
+    [SerializeField]
+    private float m_TowerRange = 5.0f;
+    [SerializeField]
+    private float m_BulletDamageAmount = 1.0f;
+    [SerializeField]
+    private float m_ExplodeRange = 4;
+    [SerializeField]
+    private float m_BulletSpeed = 15.0f;
+    [SerializeField]
+    private BulletType m_BulletType = BulletType.Normal;
+    [SerializeField]
+    private float m_ShootTimer = 1.0f;  
+    [SerializeField]
+    private float m_SeekTimer = 0.5f;
+    [SerializeField]
+    private float m_ShootAccu = 0.0f;
 
-    bool m_Seeking = false;
-
-    float m_SeekTimer = 0.5f;
-    float m_TowerRange = 5.0f;
-    uint m_BufferSize = 24;
-    int m_TargetCount;
-
-    float m_ShootTimer = 1.0f;
-    float m_ShootAccu = 0.0f;
-
-
-    Collider[] m_Targets;
-    Transform m_CurrentTarget;
+    private bool m_Seeking = false;
+    private uint m_BufferSize = 24;
+    private int m_TargetCount;
+    private Collider[] m_Targets;
+    private UnitBase m_CurrentTarget;
 
     IEnumerator Seek()
     {
@@ -34,7 +40,7 @@ public class Tower : MonoBehaviour
         m_Targets = new Collider[m_BufferSize];
     }
 
-    Transform PickBestSuitableTarget()
+    UnitBase PickBestSuitableTarget()
     {
         int shortestPathRemaining = int.MaxValue;
         int bestIndex = -1;
@@ -54,7 +60,7 @@ public class Tower : MonoBehaviour
                 }
             }
         }
-        return bestIndex != -1 ? m_Targets[bestIndex].transform : null;
+        return bestIndex != -1 ? m_Targets[bestIndex].transform.root.GetComponent<UnitBase>() : null;
     }
 
     void GetTarget()
@@ -63,22 +69,28 @@ public class Tower : MonoBehaviour
         {
             StartCoroutine("Seek");
         }
-
         m_CurrentTarget = PickBestSuitableTarget();
 
         if(m_CurrentTarget)
         {
             StopCoroutine("Seek");
             m_Seeking = false;
-            //Subscribe to target ondestroy
+            m_CurrentTarget.UnitDied += DropTarget;
         }
+    }
+
+    void DropTarget()
+    {
+        m_CurrentTarget.UnitDied -= DropTarget;
+        m_CurrentTarget = null;
+        StartCoroutine("Seek");
     }
 
     void ChangeTarget()
     {
         if(m_CurrentTarget)
         {
-            //Unsubscribe
+            m_CurrentTarget.UnitDied -= DropTarget;
         }
         GetTarget();
     }
@@ -91,20 +103,29 @@ public class Tower : MonoBehaviour
     public void UpdateTower(TowerManager towerManager)
     {
         m_ShootAccu += Time.deltaTime;
-        if(m_CurrentTarget && m_CurrentTarget.transform.root.gameObject.activeSelf)
+        if(m_CurrentTarget)
         {
-            if(Vector3.Distance(transform.position, m_CurrentTarget.position) > m_TowerRange)
+            if(Vector3.Distance(transform.position, m_CurrentTarget.transform.position) > m_TowerRange)
             {
                 ChangeTarget();
+                return;
             }
 
             if(CanShoot())
             {
                 m_ShootAccu = 0;
-                var bullet = towerManager.RequestBullet(m_BulletType);
-                bullet.transform.position = transform.position;
-                bullet.Target = m_CurrentTarget;
-                bullet.gameObject.SetActive(true);
+                Vector3 lookDir = (new Vector3(m_CurrentTarget.transform.position.x, 0, m_CurrentTarget.transform.position.z) - transform.position).normalized;
+                transform.rotation = Quaternion.LookRotation(lookDir != Vector3.zero ? lookDir : Vector3.forward);
+
+                if(m_BulletType == BulletType.Freezing)
+                {
+                    m_CurrentTarget.ApplySlow(0.5f, 2.0f);
+                }
+                else
+                {
+                    var bullet = towerManager.RequestBullet(m_BulletType);
+                    bullet.Shoot(transform.position, m_CurrentTarget.transform.position, m_BulletDamageAmount, m_BulletSpeed, m_ExplodeRange);
+                }
             }
         }
         else

@@ -1,23 +1,43 @@
 ﻿using System.Collections.Generic;
+using System.Collections;
 using UnityEngine;
 
 
 public class NormalUnit : UnitBase
 {
+    [SerializeField]
+    private UnitType m_UnitType;
+
+    [SerializeField]
+    private float m_MovementSpeed;
+    [SerializeField]
+    private float m_MaxHealth;
+    [SerializeField]
+    private float m_DamageAmount;
+
     private bool m_HasPath = false;
     private float m_UpdateTime = 0.5f;
     private float m_UpdateTimer = 0;
-    private float m_MovementSpeed = 10f;
-    private float m_Health = 10.0f;
-    private float m_SlowDuration = 1.0f;
-    private float m_SlowAccu = 0;
-    
-    [SerializeField]
-    private List<Vector2Int> m_CurrentPath;
-
+    private float m_Health = 0;
+    private float m_CurrentMovementSpeed;
+    private float m_MinDistanceToStep = 0.1f;
+    private float m_Offset = 0;
+    private List<Vector3> m_CurrentPath;
     private UnitManager m_Manager;
     private PlayerBase m_PlayerBase;
+    private Collider m_Collider;
 
+
+    public UnitType UnitType => m_UnitType;
+
+
+
+    private void Start()
+    {
+        m_Collider = GetComponentInChildren<Collider>();
+        m_Health = m_MaxHealth;
+        m_CurrentMovementSpeed = m_MovementSpeed;
+    }
 
     private void Update()
     {
@@ -33,18 +53,53 @@ public class NormalUnit : UnitBase
         else
         {
             ExecutePathing();
-        }
+        }   
+    }
 
-        var overlaps = Physics.OverlapBox(transform.position, new Vector3(0.5f, 0.5f, 0.5f));
-
-        foreach(var overlap in overlaps)
+    private void ExecutePathing()
+    {
+        if(m_CurrentPath.Count <= 0)
         {
-            if(overlap.gameObject == m_PlayerBase.gameObject)
+            var overlaps = Physics.OverlapBox(transform.position, m_Collider.bounds.extents);
+            foreach(var overlap in overlaps)
             {
-                m_PlayerBase.TakeDamage(1);
-                m_Manager.DestroyUnit(this);
+                if(overlap.gameObject == m_PlayerBase.gameObject)
+                {
+                    m_PlayerBase.TakeDamage(m_DamageAmount);
+                    Destroy();
+                }
             }
+            return;
         }
+
+        Vector3 targetPosition = m_CurrentPath[0] + Vector3.up * m_Offset;
+        Vector3 direction = (targetPosition - transform.position).normalized;
+
+        if(direction != Vector3.zero)
+        {
+            transform.rotation = Quaternion.LookRotation(direction);
+            transform.position += direction * Time.deltaTime * m_CurrentMovementSpeed;
+        }
+        else
+        {
+            m_CurrentPath.RemoveAt(0);
+        }
+
+        Vector3 directionAfterMove = (targetPosition - transform.position).normalized;
+        if(Vector3.Dot(directionAfterMove, direction) <= 0)
+        {
+            m_CurrentPath.RemoveAt(0);
+        }
+    }
+
+    public override void Destroy()
+    {
+        InvokeUnitDied();
+        m_Manager.DestroyUnit(this);
+        m_HasPath = false;
+        m_UpdateTimer = 0;
+        m_CurrentPath.Clear();
+        m_Health = m_MaxHealth;
     }
 
     public override int GetRemainingStepsOnPath()
@@ -62,8 +117,7 @@ public class NormalUnit : UnitBase
         m_Health -= damageAmount;
         if(m_Health <= 0)
         {
-            m_Health = 0;
-            m_Manager.DestroyUnit(this);
+            Destroy();
         }
     }
        
@@ -75,50 +129,23 @@ public class NormalUnit : UnitBase
         m_CurrentPath = m_Manager.RequestPath(start, end, this);
     }
 
-    bool Approx(Vector3 a, Vector3 b)
+    IEnumerator SlowTimer(float slowAmount, float duration)
     {
-        Vector3 v = a - b;
-        if (Mathf.Abs(v.x) > 0.1f || Mathf.Abs(v.y) > 0.1f || Mathf.Abs(v.z) > 0.1f)
-        {
-            return false;
-        }
-        return true;
-    }
-
-    void ExecutePathing()
-    {
-        if(m_CurrentPath.Count <= 0)
-        {
-            m_HasPath = false;
-            return;
-        }
-        Vector3 targetPosition = new Vector3(m_CurrentPath[0].x * 2, 0, m_CurrentPath[0].y * 2);
-        Vector3 direction = (targetPosition - transform.position).normalized;
-
-        if(direction != Vector3.zero)
-        {
-            transform.position += direction * Time.deltaTime * m_MovementSpeed;
-        }
-
-        if(Approx(transform.position, targetPosition))
-        {
-            m_CurrentPath.RemoveAt(0);
-        }
+        m_CurrentMovementSpeed = m_MovementSpeed * slowAmount;
+        yield return new WaitForSeconds(duration);
+        m_CurrentMovementSpeed = m_MovementSpeed;
     }
 
     public override void ApplySlow(float amount, float duration)
     {
-
-    }
-
-    public override void ClearSlow()
-    {
-
+        StopCoroutine("SlowTimer");
+        StartCoroutine(SlowTimer(amount, duration));
     }
 
     public override void Initialize(PlayerBase playerBase, UnitManager unitManager)
     {
         m_Manager = unitManager;
         m_PlayerBase = playerBase;
+        m_Offset = GetComponentInChildren<Collider>().bounds.extents.y;
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public struct TilePrefabPair
@@ -18,14 +19,16 @@ public struct TilePrefabPair
 
 public class WorldGrid : MonoBehaviour
 {
+    [SerializeField]
+    private uint m_MapIndex = 1;
+    //TODO: Propogate world scale to tileprefabs
+    [SerializeField]
+    private float m_WorldScale = 2.0f;
+
     private bool m_HasMapSpawned = false;
     private MapData m_MapData;
-    //TODO: Propogate tilescale to tile prefabs
-    private float tileScale = 2.0f;
-
     private AI.IPathFinder m_PathFinder;
-
-    [SerializeField]
+    public List<Wave> SpawnWaves => m_MapData.Waves;
     private Dictionary<TileType, GameObject> m_PrefabDictionary;
 
     private void Awake()
@@ -36,7 +39,7 @@ public class WorldGrid : MonoBehaviour
         {
             prefabs.Add(new TilePrefabPair(so.m_TileTypes[i], so.m_GameObjects[i]));
         }
-        Initialize("Assets/Resources/MapSettings/map_1.txt", prefabs);
+        Initialize("Assets/Resources/MapSettings/map_" + m_MapIndex.ToString() + ".txt", prefabs);
         m_PathFinder = new AI.Dijkstra(m_MapData.Accessibles);
     }
 
@@ -66,7 +69,7 @@ public class WorldGrid : MonoBehaviour
                 int tileId = m_MapData.Grid[x + (y * m_MapData.Bounds.x)];
                 TileType tileType = TileMethods.TypeById[tileId];
                 var go = Instantiate(m_PrefabDictionary[tileType], transform);
-                go.transform.position = new Vector3(x * tileScale, 0, y * tileScale);
+                go.transform.position = new Vector3(x * m_WorldScale, 0, y * m_WorldScale);
             }
         }
         m_HasMapSpawned = true;
@@ -82,9 +85,18 @@ public class WorldGrid : MonoBehaviour
         m_HasMapSpawned = false;
     }
 
-    public IEnumerable<Vector2Int> GetPath(Vector2Int start, Vector2Int end)
+    public IEnumerable<Vector3> GetPath(Vector3 start, Vector3 end)
     {
-        return m_PathFinder.FindPath(start, end);
+        Vector2Int scaledStart = new Vector2Int((int)(start.x / m_WorldScale), (int)(start.z / m_WorldScale));
+        Vector2Int scaledEnd = new Vector2Int((int)(end.x / m_WorldScale), (int)(end.z / m_WorldScale));
+
+        List<Vector2Int> path = m_PathFinder.FindPath(scaledStart, scaledEnd).ToList();
+        List<Vector3> worldPath = new List<Vector3>();
+        for(int i =0; i < path.Count; i++)
+        {
+            worldPath.Add(new Vector3(path[i].x * m_WorldScale, 0, path[i].y * m_WorldScale));
+        }
+        return worldPath;
     }
 
     public void GetSpawnData()
